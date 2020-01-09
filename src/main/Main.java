@@ -38,16 +38,19 @@ public class Main {
 	public static void main(String[] args) {
 		String test = "";
 		JPEG_Compress jpeg_compress = new JPEG_Compress();
-		
+
 		//detect if this OS is Window10 or MacOS
-		if(System.getProperty("os.name").equals(OS_NAME_WIN)) {
+		if (System.getProperty("os.name").equals(OS_NAME_WIN)) {
 			jpeg_compress.Compress(input_url_theTestOfHangging, output_url_Window);
-		}else {
+		} else {
 			jpeg_compress.Compress(input_url, output_url_Mac);
 		}
-		
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
-		   LocalDateTime now = LocalDateTime.now();  
-		   System.out.println(dtf.format(now));  	}
+
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+		System.out.println(dtf.format(now));
+
+
+	}
 	
 }

@@ -131,8 +131,15 @@ public class JPEG_Compress {
 	Bitcode huffmanTable_Y_AC[];
 	Bitcode huffmanTable_CbCr_DC[];
 	Bitcode huffmanTable_CbCr_AC[];
+
+	Huffman.HuffmanCode[] huffmanLuminanceDC;
+	Huffman.HuffmanCode[] huffmanLuminanceAC;
+	Huffman.HuffmanCode[] huffmanChrominanceDC;
+	Huffman.HuffmanCode[] huffmanChrominanceAC;
 	
-	Bitcode codeWordFoQuantizedValuePositive[], codeWordFoQuantizedValueNagative[];
+//	Bitcode codeWordFoQuantizedValuePositive[], codeWordFoQuantizedValueNagative[];
+
+	Huffman.HuffmanCode[] codeWords ;
 	
 	BitBuffer bitBuffer;
 	char specialByte = 0xFF;
@@ -272,7 +279,8 @@ public class JPEG_Compress {
 	public boolean Compress(String input_url, String output_url) {
 		readImage(input_url);
 //		createExampleImage();
-		genHuffmanTables();
+//		genHuffmanTables();
+		GenHuffmanTables();
 		prepareTempCode();
 		reverseQMattrix();
 		try {
@@ -283,7 +291,8 @@ public class JPEG_Compress {
 
 			 
 			writeAllMetadata(writer);
-			genCodeWordForQuantizedValue();
+//			genCodeWordForQuantizedValue();
+			codeWords = Huffman.GenerateValueTable();
 			
 			bitBuffer  = new BitBuffer(0, (char) 0);
 			
@@ -803,64 +812,72 @@ public class JPEG_Compress {
 	private int EntropyEncode(int[] vector, int lastDC, char TYPE) {
 //		logVector(vector);
 //		System.out.println("\nEncoding DC:.......");
-		Bitcode[] huffmanTableDC, huffmanTableAC;
+//		Bitcode[] huffmanTableDC, huffmanTableAC;
+		Huffman.HuffmanCode[] huffmanTableDC, huffmanTableAC;
 		if(TYPE == Type_Y) {
-			huffmanTableDC = huffmanTable_Y_DC;
-			huffmanTableAC = huffmanTable_Y_AC;
+//			huffmanTableDC = huffmanTable_Y_DC;
+//			huffmanTableAC = huffmanTable_Y_AC;
+			huffmanTableDC = huffmanLuminanceDC;
+			huffmanTableAC = huffmanLuminanceAC;
 		}else {
-			huffmanTableDC = huffmanTable_CbCr_DC;
-			huffmanTableAC = huffmanTable_CbCr_AC;
+//			huffmanTableDC = huffmanTable_CbCr_DC;
+//			huffmanTableAC = huffmanTable_CbCr_AC;
+			huffmanTableDC = huffmanChrominanceDC;
+			huffmanTableAC = huffmanChrominanceAC;
 		}
 		//encode DC
 //		System.out.println("DC:"+vector[0]);
 		int diff =  (vector[0] - lastDC);
 //		System.out.println("DC diff:"+diff);
-		if(diff==0) {
-			writeBits(huffmanTableDC[0x00]);
-		}else {
-			Bitcode codeword;
-			if(diff>0) 	codeword = codeWordFoQuantizedValuePositive[diff];
-			else  codeword = codeWordFoQuantizedValueNagative[-diff];
-//			codeword.myPrintCodeWord();
-			writeBits(huffmanTableDC[codeword.getNumOfBit()]);//write the code word
-			writeBits(codeword);
-		}
-		
-		
-		//encode A
-//		System.out.println("\nEncoding AC:.......");
-		char posNoneZero = 0;
-		char numOfSequenceZero = 0;
-		
-		if(TYPE == Type_Y) posNoneZero = pos_NonZero_Y ;
-		else if(TYPE == Type_Cb) posNoneZero = pos_NonZero_Cb;
-		else posNoneZero = pos_NonZero_Cr;
-//		System.out.println("Last none zero:"+(int)posNoneZero);
-		
-		for(int i=1; i<=posNoneZero; i++) {
-			if(vector[i]==0) numOfSequenceZero+=0x10;
-			else {
-//				System.out.println("\n***AC values: "+vector[i]);
-				if(numOfSequenceZero>0xF0) {
-					writeBits(huffmanTableAC[0xF0]);
-					numOfSequenceZero = 0;
-				}
-				Bitcode codeword;
-				if(vector[i]>0) 	codeword = codeWordFoQuantizedValuePositive[vector[i]];
-				else  codeword = codeWordFoQuantizedValueNagative[-vector[i]];
-//				codeword.myPrintCodeWord();
-//				System.out.println("numOfSequence ** "+ (int)numOfSequenceZero +"numofbit"+ (int)codeword.getNumOfBit());
-				writeBits(huffmanTableAC[numOfSequenceZero+codeword.getNumOfBit()]);//TODO: or +
-//				System.out.println(huffmanTableAC[numOfSequenceZero+codeword.getNumOfBit()].getCode());
-				writeBits(codeword);
-				numOfSequenceZero = 0;
-			}
-		}
-		
-		if(posNoneZero<63) {
-//			System.out.println(">>>>>write 0x00");
-			writeBits(huffmanTableAC[0x00]);
-		}
+//		if(diff==0) {
+//			writeBits(huffmanTableDC[0x00]);
+//		}else {
+//			Bitcode codeword;
+//			if(diff>0) 	codeword = codeWordFoQuantizedValuePositive[diff];
+//			else  codeword = codeWordFoQuantizedValueNagative[-diff];
+////			codeword.myPrintCodeWord();
+//			writeBits(huffmanTableDC[codeword.getNumOfBit()]);//write the code word
+//			writeBits(codeword);
+//		}
+//
+//
+//		//encode A
+////		System.out.println("\nEncoding AC:.......");
+//		char posNoneZero = 0;
+//		char numOfSequenceZero = 0;
+//
+//		if(TYPE == Type_Y) posNoneZero = pos_NonZero_Y ;
+//		else if(TYPE == Type_Cb) posNoneZero = pos_NonZero_Cb;
+//		else posNoneZero = pos_NonZero_Cr;
+////		System.out.println("Last none zero:"+(int)posNoneZero);
+//
+//		for(int i=1; i<=posNoneZero; i++) {
+//			if(vector[i]==0) numOfSequenceZero+=0x10;
+//			else {
+////				System.out.println("\n***AC values: "+vector[i]);
+//				if(numOfSequenceZero>0xF0) {
+//					writeBits(huffmanTableAC[0xF0]);
+//					numOfSequenceZero = 0;
+//				}
+//				Bitcode codeword;
+//				if(vector[i]>0) 	codeword = codeWordFoQuantizedValuePositive[vector[i]];
+//				else  codeword = codeWordFoQuantizedValueNagative[-vector[i]];
+////				codeword.myPrintCodeWord();
+////				System.out.println("numOfSequence ** "+ (int)numOfSequenceZero +"numofbit"+ (int)codeword.getNumOfBit());
+//				writeBits(huffmanTableAC[numOfSequenceZero+codeword.getNumOfBit()]);//TODO: or +
+////				System.out.println(huffmanTableAC[numOfSequenceZero+codeword.getNumOfBit()].getCode());
+//				writeBits(codeword);
+//				numOfSequenceZero = 0;
+//			}
+//		}
+//
+//		if(posNoneZero<63) {
+////			System.out.println(">>>>>write 0x00");
+//			writeBits(huffmanTableAC[0x00]);
+//		}
+
+		Huffman.EncodeBlock(vector, huffmanTableDC,huffmanTableAC,codeWords);
+
 		return vector[0];
 	}
 	private void writeBits(Bitcode codeword) {
@@ -913,6 +930,14 @@ public class JPEG_Compress {
 		logBitCodeArr(huffmanTable_CbCr_AC);
 	
 	}
+
+	private void GenHuffmanTables() {
+		Huffman.HuffmanCode[] huffmanLuminanceDC = Huffman.GenerateHuffmanTable(Huffman.DcLuminanceCodesPerBitsize, Huffman.DcLuminanceValues);
+		Huffman.HuffmanCode[] huffmanLuminanceAC = Huffman.GenerateHuffmanTable(Huffman.AcLuminanceCodesPerBitsize, Huffman.AcLuminanceValues);
+		Huffman.HuffmanCode[] huffmanChrominanceDC = Huffman.GenerateHuffmanTable(Huffman.DcChrominanceCodesPerBitsize, Huffman.DcChrominanceValues);
+		Huffman.HuffmanCode[] huffmanChrominanceAC = Huffman.GenerateHuffmanTable(Huffman.AcChrominanceCodesPerBitsize, Huffman.AcChrominanceValues);
+	}
+
 	private Bitcode[] generateHuffmanTable(char[] CodesPerBitSizeArr, char[] CodeValuesArr) {
 		Bitcode[] result = new Bitcode[256];
 		char huffmanCode = 0;
@@ -927,29 +952,29 @@ public class JPEG_Compress {
 		}
 		return result;
 	}
-	private void genCodeWordForQuantizedValue() {
-		codeWordFoQuantizedValuePositive = new Bitcode[2048];
-		codeWordFoQuantizedValueNagative = new Bitcode[2048];
-
-		char numbits = 1;
-		int mask = 1;
-		for(char codevalue=1; codevalue< 2048; codevalue++) {
-			if(codevalue>mask) {
-				numbits++;
-				mask =  ((mask<<1)|1);
-			}
-			codeWordFoQuantizedValuePositive[codevalue] = new Bitcode(codevalue, codevalue, numbits);
-			codeWordFoQuantizedValueNagative[codevalue] = new Bitcode((char)(mask-codevalue), -codevalue, numbits);
-		}
-		
-	
+//	private void genCodeWordForQuantizedValue() {
+//		codeWordFoQuantizedValuePositive = new Bitcode[2048];
+//		codeWordFoQuantizedValueNagative = new Bitcode[2048];
+//
+//		char numbits = 1;
+//		int mask = 1;
 //		for(char codevalue=1; codevalue< 2048; codevalue++) {
-//			codeWordFoQuantizedValuePositive[codevalue].printCodeWord();
-//			codeWordFoQuantizedValueNagative[codevalue].myPrintCodeWord();
-//			System.out.println();
+//			if(codevalue>mask) {
+//				numbits++;
+//				mask =  ((mask<<1)|1);
+//			}
+//			codeWordFoQuantizedValuePositive[codevalue] = new Bitcode(codevalue, codevalue, numbits);
+//			codeWordFoQuantizedValueNagative[codevalue] = new Bitcode((char)(mask-codevalue), -codevalue, numbits);
 //		}
-	
-	}
+//
+//
+////		for(char codevalue=1; codevalue< 2048; codevalue++) {
+////			codeWordFoQuantizedValuePositive[codevalue].printCodeWord();
+////			codeWordFoQuantizedValueNagative[codevalue].myPrintCodeWord();
+////			System.out.println();
+////		}
+//
+//	}
 
 	
 

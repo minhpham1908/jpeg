@@ -22,7 +22,6 @@ public class Bitcode {
 		System.out.print(Integer.toHexString((int)i) + ":" + codeWord2BinaryString()+"\t");
 	}
 	public String codeWord2BinaryString() {
-		
 		StringBuilder reverseResult = new StringBuilder();
 		StringBuilder result = new StringBuilder();
 		int number = code;
